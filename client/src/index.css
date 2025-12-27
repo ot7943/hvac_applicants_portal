@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Import Google Fonts for Professional Corporate Design */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -43,7 +46,14 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
+  /* Professional Corporate Color Palette */
+  --primary: #0F3460; /* Deep Navy Blue */
+  --primary-accent: #00D9FF; /* Vibrant Cyan */
+  --neutral-light: #F5F7FA; /* Clean Light Gray */
+  --neutral-medium: #E8EEF5; /* Soft Gray */
+  --text-primary: #1A1A1A; /* Charcoal */
+  --text-secondary: #4A5568; /* Medium Gray */
+  --primary-standard: var(--color-blue-700);
   --primary-foreground: var(--color-blue-50);
   --sidebar-primary: var(--color-blue-600);
   --sidebar-primary-foreground: var(--color-blue-50);
@@ -52,9 +62,13 @@
   --chart-3: var(--color-blue-600);
   --chart-4: var(--color-blue-700);
   --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
+  --radius: 0.5rem; /* Slightly tighter radius for technical feel */
+  /* A4 Print Optimization */
+  --print-margin: 1rem;
+  --print-page-width: 210mm;
+  --print-page-height: 297mm;
+  --background: #FFFFFF;
+  --foreground: var(--text-primary);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.235 0.015 65);
   --popover: oklch(1 0 0);
@@ -114,12 +128,59 @@
 }
 
 @layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+  }
+  
+  code, pre, .mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  
+  /* A4 Print Styles */
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+    
+    .no-print {
+      display: none !important;
+    }
+    
+    .print-page {
+      page-break-after: always;
+      width: 210mm;
+      height: 297mm;
+      margin: 0;
+      padding: 1rem;
+      background: white;
+      box-sizing: border-box;
+    }
+    
+    .print-page:last-child {
+      page-break-after: avoid;
+    }
+  }
+  
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
+  
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),

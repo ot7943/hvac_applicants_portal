@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Printer, Download } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import applicantsData from '@/data/applicants.json';
+import { ApplicantPrintCard } from '@/components/ApplicantPrintCard';
+import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/_core/hooks/useAuth';
 
 interface Applicant {
   id: number;
@@ -22,16 +24,24 @@ interface Applicant {
  * - Asymmetric design with Van Tech branding
  */
 export default function Home() {
+  const { user } = useAuth();
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Fetch applicants from database
+  const { data: dbApplicants, isLoading } = trpc.applicants.list.useQuery(undefined, {
+    enabled: !!user,
+  });
+
   useEffect(() => {
-    setApplicants(applicantsData);
-    if (applicantsData.length > 0) {
-      setSelectedApplicant(applicantsData[0]);
+    if (dbApplicants) {
+      setApplicants(dbApplicants);
+      if (dbApplicants.length > 0) {
+        setSelectedApplicant(dbApplicants[0]);
+      }
     }
-  }, []);
+  }, [dbApplicants]);
 
   const handlePrint = () => {
     if (selectedApplicant && printRef.current) {
@@ -65,10 +75,6 @@ export default function Home() {
               }
               
               .print-page {
-                width: 210mm;
-                height: 297mm;
-                padding: 1rem;
-                background: white;
                 page-break-after: always;
               }
               
@@ -97,23 +103,16 @@ export default function Home() {
     }
   };
 
-  const getPlatformLabel = (platform: string) => {
-    const labels: { [key: string]: string } = {
-      fb: 'Facebook',
-      ig: 'Instagram',
-      organic: 'Organic'
-    };
-    return labels[platform] || platform.toUpperCase();
-  };
-
-  const getPlatformColor = (platform: string) => {
-    const colors: { [key: string]: string } = {
-      fb: 'bg-blue-100 text-blue-800',
-      ig: 'bg-pink-100 text-pink-800',
-      organic: 'bg-green-100 text-green-800'
-    };
-    return colors[platform] || 'bg-gray-100 text-gray-800';
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0F3460] mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading applicants...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -178,101 +177,8 @@ export default function Home() {
           {/* Main Content - Applicant Card */}
           <main className="lg:col-span-3">
             {selectedApplicant && (
-              <div
-                ref={printRef}
-                className="print-page bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden"
-              >
-                {/* Print Page Container */}
-                <div className="p-8 min-h-[297mm] flex flex-col justify-between bg-white">
-                  {/* Header Section */}
-                  <div>
-                    {/* Van Tech Logo */}
-                    <div className="mb-8 pb-6 border-b-2 border-[#00D9FF]">
-                      <img
-                        src="/images/van-tech-logo.png"
-                        alt="Van Tech Logo"
-                        className="h-16 object-contain"
-                      />
-                    </div>
-
-                    {/* Title */}
-                    <div className="mb-8">
-                      <h2 className="text-3xl font-bold text-[#0F3460] mb-2">
-                        Applicant Profile
-                      </h2>
-                      <p className="text-sm text-slate-500">
-                        Position: HVAC MAINTENANCE ENGINEER
-                      </p>
-                    </div>
-
-                    {/* Applicant Information */}
-                    <div className="space-y-6 mb-8">
-                      {/* Name Section */}
-                      <div className="bg-gradient-to-r from-[#0F3460] to-[#1a4d7a] rounded-lg p-6 text-white">
-                        <p className="text-xs font-semibold text-[#00D9FF] uppercase tracking-wide mb-2">
-                          Full Name
-                        </p>
-                        <h3 className="text-2xl font-bold">{selectedApplicant.fullName}</h3>
-                      </div>
-
-                      {/* Contact Information Grid */}
-                      <div className="grid grid-cols-2 gap-6">
-                        {/* Phone */}
-                        <div className="border-l-4 border-[#00D9FF] pl-4">
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
-                            Phone
-                          </p>
-                          <p className="text-lg font-medium text-slate-900 mono">
-                            {selectedApplicant.phone}
-                          </p>
-                        </div>
-
-                        {/* Email */}
-                        <div className="border-l-4 border-[#00D9FF] pl-4">
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
-                            Email
-                          </p>
-                          <p className="text-sm font-medium text-slate-900 break-all">
-                            {selectedApplicant.email}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Job Title and Platform */}
-                      <div className="grid grid-cols-2 gap-6">
-                        {/* Job Title */}
-                        <div className="border-l-4 border-[#00D9FF] pl-4">
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
-                            Current Job Title
-                          </p>
-                          <p className="text-lg font-medium text-slate-900">
-                            {selectedApplicant.jobTitle}
-                          </p>
-                        </div>
-
-                        {/* Platform */}
-                        <div className="border-l-4 border-[#00D9FF] pl-4">
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
-                            Application Source
-                          </p>
-                          <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getPlatformColor(selectedApplicant.platform)}`}>
-                            {getPlatformLabel(selectedApplicant.platform)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer Section */}
-                  <div className="pt-8 border-t-2 border-slate-200 flex items-center justify-center gap-2">
-                    <span className="text-xs text-slate-500">Powered By</span>
-                    <img
-                      src="/images/omar-tech-logo.png"
-                      alt="Omar Technology"
-                      className="h-6 object-contain"
-                    />
-                  </div>
-                </div>
+              <div ref={printRef} className="bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden">
+                <ApplicantPrintCard applicant={selectedApplicant} />
               </div>
             )}
 
